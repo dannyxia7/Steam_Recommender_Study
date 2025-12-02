@@ -208,3 +208,5 @@ __marimo__/
 
 # Ignore larger data file
 data/steam_reviews.json.gz
+model_1_writeup.txt
+.DS_Store
