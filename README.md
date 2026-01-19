@@ -78,3 +78,12 @@ During peer and faculty review, this project was highlighted for its unique appr
 * **Production-Ready Implementation:** The pipeline was validated as production-ready due to its modular design, optimized data handling via Parquet, and a clear inference path that balances computational efficiency with predictive depth.
 
 ---
+
+## Installation
+
+```bash
+# Clone the repository
+git clone [https://github.com/dannyxia7/Steam_Recommender_Study.git](https://github.com/dannyxia7/Steam_Recommender_Study.git)
+
+# Install requirements
+pip install pandas numpy scikit-learn xgboost pyarrow matplotlib
