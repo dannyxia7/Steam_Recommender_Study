@@ -52,6 +52,14 @@ By recovering information from the residuals, the Hybrid model reduces Mean Abso
 | Ridge + XGBoost Ensemble | 8.15 | +34.0% |
 | **Hybrid (Ensemble + MF Residuals)** | **7.21** | **+42.0%** |
 
+## Technical Insights
+
+* **Log-Stabilization:** Applying $\ln(1+x)$ was critical to managing the long-tail distribution of playtime hours. This normalization prevents the model from being biased by extreme "power users" and ensures better convergence.
+* **Residual Analysis:** This project demonstrates that ensemble errors are not necessarily random noise; they can contain collaborative signals. By modeling these residuals, we essentially perform a "second pass" that catches the nuances of user-item interactions.
+* **Sparse Feature Management:** The use of Truncated SVD on TF-IDF vectors allowed for the inclusion of rich NLP data without the computational overhead of high-dimensional sparse matrices.
+
+---
+
 ## Reception and Validation
 
 During peer and faculty review, this project was highlighted for its unique approach to error-correction. 
