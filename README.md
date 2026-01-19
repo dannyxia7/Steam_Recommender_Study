@@ -15,36 +15,41 @@ This project implements a regression pipeline designed to predict hours played o
 
 ---
 
+## Exploratory Data Analysis (EDA)
+
+The Steam dataset exhibits an extreme "long-tail" distribution. Initial analysis focused on log-stabilizing the target variable to handle the high variance between casual players and power users, ensuring the model remains robust across all engagement levels.
+
+![Target Distribution Analysis](https://github.com/dannyxia7/Steam_Recommender_Study/blob/main/true_vs_pred.png?raw=true)
+*Figure 1: Comparison of True vs. Predicted values, highlighting the model's alignment across the transformed distribution.*
+
+---
+
 ## Model Architecture
 
 The system follows a "Stacking + Correction" workflow to capture global, local, and latent signals.
 
 ### 1. Feature Engineering and NLP
-Community sentiment is a high-variance signal. To capture this, the model processes raw review text using **TF-IDF Vectorization**, reduced via **Truncated SVD** to manage dimensionality. This is concatenated with metadata including game tags, price points, and historical user engagement.
+Review text is processed via **TF-IDF Vectorization** and reduced through **Truncated SVD**. This captures community sentiment which is then fused with game metadata (tags, price, and developer history).
 
 ### 2. Base Ensemble (Ridge + XGBoost)
-We train two distinct models to capture different data signals:
-* **Ridge Regression:** Provides a stable linear baseline and handles high-dimensional sparse features.
-* **XGBoost:** Learns complex, non-linear interactions between genres and user behavior.
-* **Weighted Blending:** Predictions are merged using an optimized ratio to create a robust explicit signal.
+* **Ridge Regression:** Provides a stable linear baseline for sparse text features.
+* **XGBoost:** Learns complex, non-linear interactions between game genres and user behavior.
+* **Weighted Blending:** Predictions are merged to create a robust "Explicit Signal."
 
 ### 3. Residual Correction (Matrix Factorization)
-Standard models often miss latent user-game preferences that are not explicit in the metadata. We treat the errors of the ensemble as a signal to be modeled:
-1.  **Residual Calculation:** $e = y_{actual} - \hat{y}_{ensemble}$
-2.  **Latent Factor Modeling:** We decompose the residual matrix into latent user and item vectors.
-3.  **Correction:** The model predicts the *expected error* for a specific user-item pair based on collaborative patterns.
-
-
-
-### 4. Final Inference
-The final prediction is the sum of the ensemble output and the latent correction, inverted from log-space:
-$$\text{Final Prediction} = \exp(\hat{y}_{ensemble} + [U \cdot V]) - 1$$
+Standard models often miss latent user-game preferences that are not explicit in metadata. We treat the errors of the ensemble as a signal to be modeled:
+1. **Residual Calculation:** $e = y_{actual} - \hat{y}_{ensemble}$
+2. **Latent Factor Modeling:** We decompose the residual matrix into latent user and item vectors ($U$ and $V$).
+3. **Correction:** The model predicts the *expected error* for a specific user-item pair based on collaborative patterns.
 
 ---
 
 ## Performance Evaluation
 
-By recovering information from the residuals, the Hybrid model reduces Mean Absolute Error (MAE) compared to traditional standalone approaches.
+By recovering information from the residuals, the Hybrid model significantly reduces both Mean Squared Error (MSE) and Mean Absolute Error (MAE).
+
+![MSE Comparison](mse_comparison.png)
+*Figure 2: Performance metrics across models showing the reduction in MSE using the Hybrid approach.*
 
 | Model Strategy | MAE (Hours) | Accuracy Gain |
 | :--- | :--- | :--- |
@@ -52,11 +57,16 @@ By recovering information from the residuals, the Hybrid model reduces Mean Abso
 | Ridge + XGBoost Ensemble | 8.15 | +34.0% |
 | **Hybrid (Ensemble + MF Residuals)** | **7.21** | **+42.0%** |
 
+![MAE Comparison](raw_mae.png)
+*Figure 3: Final Raw Hours MAE Comparison highlighting the Final Hybrid model's performance.*
+
+---
+
 ## Technical Insights
 
-* **Log-Stabilization:** Applying $\ln(1+x)$ was critical to managing the long-tail distribution of playtime hours. This normalization prevents the model from being biased by extreme "power users" and ensures better convergence.
-* **Residual Analysis:** This project demonstrates that ensemble errors are not necessarily random noise; they can contain collaborative signals. By modeling these residuals, we essentially perform a "second pass" that catches the nuances of user-item interactions.
-* **Sparse Feature Management:** The use of Truncated SVD on TF-IDF vectors allowed for the inclusion of rich NLP data without the computational overhead of high-dimensional sparse matrices.
+* **Log-Stabilization:** Applying $\ln(1+x)$ was critical to managing the long-tail distribution, preventing "power users" from skewing the model weights and ensuring better convergence.
+* **Residual Signal:** This project demonstrates that ensemble errors contain collaborative signals. By modeling residuals, we perform a "second pass" that catches nuances standard regressors miss.
+* **Dimensionality Management:** The use of Truncated SVD allowed for the inclusion of rich NLP data without the computational overhead of high-dimensional sparse matrices.
 
 ---
 
